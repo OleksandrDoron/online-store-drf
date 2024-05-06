@@ -10,4 +10,5 @@ class IsClient(BasePermission):
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
-        return request.user.groups.filter(name="Администратор").exists()
+        if request.method in permissions.SAFE_METHODS:
+            return request.user.groups.filter(name="Администратор").exists()
