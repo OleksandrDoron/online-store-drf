@@ -108,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "ru-ru"
+LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
 
@@ -116,15 +116,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-LANGUAGES = [
-    ("en", "English"),
-    ("ru", "Russian"),
-    ("uk", "Ukrainian"),
-]
-
-LOCALE_PATHS = [
-    os.path.join(BASE_DIR, "locale"),
-]
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -146,7 +137,4 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication'
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-        ]
 }
