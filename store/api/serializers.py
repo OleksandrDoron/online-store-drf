@@ -50,6 +50,9 @@ class ProductStaffSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
     def validate(self, attrs):
+        """
+        Проверяет цену товара после применения скидки, чтобы убедиться, что она не опустилась ниже его себестоимости.
+        """
         cost_price = Decimal(attrs.get("cost_price", 0))
         price = Decimal(attrs.get("price", 0))
         discount = Decimal(attrs.get("discount", 0))

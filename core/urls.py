@@ -44,10 +44,16 @@ swagger_urlpatterns = [
     ),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api-auth/", include("rest_framework.urls")),
     path("", include("store.urls")),
+
+    # auth
+    path("api/auth/", include("rest_framework.urls")),
+    path("auth/", include("djoser.urls")),
+    path(r'auth/', include('djoser.urls.authtoken')),
+
 ]
 
 urlpatterns += swagger_urlpatterns
