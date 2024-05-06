@@ -10,7 +10,7 @@ class User(AbstractUser):
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Баланс",
+        verbose_name="Balance",
     )
     groups = models.ManyToManyField("Group", related_name="user_groups")
 
@@ -19,7 +19,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if self.balance < 0:
-            raise ValidationError("Баланс не может быть отрицательным")
+            raise ValidationError("The balance cannot be negative.")
         super().save(*args, **kwargs)
 
 

@@ -20,25 +20,25 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     CATEGORY = openapi.Parameter(
         name="category",
         in_=openapi.IN_QUERY,
-        description="Фильтровать продукты по категории. Используйте запятые для указания нескольких категорий.",
+        description="Filter products by category. Use commas to specify multiple categories.",
         type=openapi.TYPE_STRING,
     )
     MIN_PRICE = openapi.Parameter(
         name="min_price",
         in_=openapi.IN_QUERY,
-        description="Фильтровать продукты по минимальной цене.",
+        description="Filter products by minimum price.",
         type=openapi.TYPE_NUMBER,
     )
     MAX_PRICE = openapi.Parameter(
         name="max_price",
         in_=openapi.IN_QUERY,
-        description="Фильтровать продукты по максимальной цене.",
+        description="Filter products by maximum price.",
         type=openapi.TYPE_NUMBER,
     )
     NAME = openapi.Parameter(
         name="name",
         in_=openapi.IN_QUERY,
-        description="Фильтровать продукты по названию. Поиск не чувствителен к регистру.",
+        description="Filter products by name. Search is case-insensitive.",
         type=openapi.TYPE_STRING,
     )
 

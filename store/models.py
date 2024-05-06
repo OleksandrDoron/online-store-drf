@@ -1,42 +1,41 @@
-from django.core.exceptions import ValidationError
 from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Название")
+    name = models.CharField(max_length=50, unique=True, verbose_name="Category name")
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name = "Категория"
-        verbose_name_plural = "Категории"
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
         ordering = ("id",)
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Название")
+    name = models.CharField(max_length=50, unique=True, verbose_name="Product name")
     category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, verbose_name="Категория"
+        Category, on_delete=models.CASCADE, verbose_name="Category"
     )
     price = models.DecimalField(
-        default=0.00, max_digits=6, decimal_places=2, verbose_name="Цена"
+        default=0.00, max_digits=6, decimal_places=2, verbose_name="Price"
     )
-    quantity = models.PositiveIntegerField(default=0, verbose_name="Количество")
+    quantity = models.PositiveIntegerField(default=0, verbose_name="Quantity")
     discount = models.FloatField(
-        default=0.00, null=True, blank=True, verbose_name="Скидка"
+        default=0.00, null=True, blank=True, verbose_name="Discount"
     )
-    available = models.BooleanField(default=True, verbose_name="Наличие")
+    available = models.BooleanField(default=True, verbose_name="Availability")
     cost_price = models.DecimalField(
-        max_digits=6, decimal_places=2, verbose_name="Себестоимость"
+        max_digits=6, decimal_places=2, verbose_name="Cost Price"
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Create at")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Update at")
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name = "Товар"
-        verbose_name_plural = "Товары"
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
         ordering = ("id",)

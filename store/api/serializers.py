@@ -16,8 +16,9 @@ class ProductSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
     def get_discount_price(self, obj: app_models.Product):
-        """Возвращает цену товара с учётом скидки, если скидка присутствует."""
-
+        """
+        Returns the price of the product taking into account any discount applied.
+        """
         if obj.discount != Decimal("0.00"):
             discount_price = obj.price * (
                 Decimal("1.00") - obj.discount / Decimal("100.00")
@@ -27,9 +28,9 @@ class ProductSerializer(serializers.Serializer):
             return None
 
     def to_representation(self, instance):
-        """Удаляет поля 'discount_price' и 'discount', если их значения соответственно равны None и 0,
-        чтобы они не были включены в итоговое представление данных для сериализации."""
-
+        """
+        Remove irrelevant discount-related fields from the serialized data.
+        """
         data = super().to_representation(instance)
         if data["discount_price"] is None:
             del data["discount_price"]
@@ -51,7 +52,7 @@ class ProductStaffSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Проверяет цену товара после применения скидки, чтобы убедиться, что она не опустилась ниже его себестоимости.
+        Validates the product price after applying a discount to ensure it does not fall below its cost price.
         """
         cost_price = Decimal(attrs.get("cost_price", 0))
         price = Decimal(attrs.get("price", 0))
@@ -63,7 +64,7 @@ class ProductStaffSerializer(serializers.Serializer):
 
         if discounted_price < min_acceptable_price:
             raise serializers.ValidationError(
-                "Цена товара после применения скидки не может быть ниже себестоимости."
+                "Product price after applying discount cannot be lower than the cost price."
             )
 
         return attrs

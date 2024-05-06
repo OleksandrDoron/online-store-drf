@@ -11,22 +11,22 @@ class ProductFilter(django_filters.FilterSet):
     category = CharFilterInFilter(
         field_name="category__name",
         lookup_expr="in",
-        label="Категория (укажите одну или несколько категорий, разделяя запятыми)",
+        label="Category (specify one or more categories, separated by commas)",
     )
     min_price = filters.NumberFilter(
         field_name="price",
         lookup_expr="gte",
-        label="Минимальная цена (отфильтровать продукты с ценой выше или равной указанной)",
+        label="Minimum Price (filter products with a price higher than or equal to the specified)",
     )
     max_price = filters.NumberFilter(
         field_name="price",
         lookup_expr="lte",
-        label="Максимальная цена (отфильтровать продукты с ценой ниже или равной указанной)",
+        label="Maximum Price (filter products with a price lower than or equal to the specified)",
     )
     name = filters.CharFilter(
         field_name="name",
         lookup_expr="icontains",
-        label="Название (введите часть или полное название продукта для поиска)",
+        label="Name (enter a part or full name of the product for search)",
     )
 
     class Meta:
