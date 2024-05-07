@@ -5,10 +5,10 @@ from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from .filters import ProductFilter
-from .permissions import IsAdmin
+from store.api.filters import ProductFilter
+from store.api.permissions import IsAdmin
 from store.models import Product, Category
-from .serializers import CategorySerializer, ProductStaffSerializer, ProductSerializer
+from store.api.serializers import CategorySerializer, ProductStaffSerializer, ProductSerializer
 
 
 class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):

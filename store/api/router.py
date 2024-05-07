@@ -1,6 +1,6 @@
 from rest_framework import routers
 
-from .views import *
+from store.api.views import ProductSearchViewSet, ProductStaffViewSet
 
 router = routers.DefaultRouter()
 router.register("product", ProductSearchViewSet, basename="product")
