@@ -8,13 +8,18 @@ from rest_framework.viewsets import ModelViewSet
 from store.api.filters import ProductFilter
 from store.api.permissions import IsAdmin
 from store.models import Product, Category
-from store.api.serializers import CategorySerializer, ProductStaffSerializer, ProductSerializer
+from store.api.serializers import (
+    CategorySerializer,
+    ProductStaffSerializer,
+    ProductSerializer,
+)
+from users.models import User
 
 
 class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
 
     CATEGORY = openapi.Parameter(
@@ -50,7 +55,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
 class ProductStaffViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductStaffSerializer
-    permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin,)
 
 
 class CategoryList(generics.ListAPIView):

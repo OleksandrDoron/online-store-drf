@@ -22,8 +22,8 @@ class Product(models.Model):
         default=0.00, max_digits=6, decimal_places=2, verbose_name="Price"
     )
     quantity = models.PositiveIntegerField(default=0, verbose_name="Quantity")
-    discount = models.FloatField(
-        default=0.00, null=True, blank=True, verbose_name="Discount"
+    discount = models.IntegerField(
+        default=0, null=True, blank=True, verbose_name="Discount"
     )
     available = models.BooleanField(default=True, verbose_name="Availability")
     cost_price = models.DecimalField(

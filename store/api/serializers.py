@@ -9,33 +9,27 @@ class ProductSerializer(serializers.Serializer):
     name = serializers.CharField(read_only=True)
     category = serializers.CharField(source="category.name", read_only=True)
     price = serializers.FloatField(read_only=True)
-    discount_price = serializers.SerializerMethodField(read_only=True)
+    discounted_price = serializers.SerializerMethodField()
     discount = serializers.IntegerField(read_only=True)
     quantity = serializers.IntegerField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
-    def get_discount_price(self, obj: app_models.Product):
-        """
-        Returns the price of the product taking into account any discount applied.
-        """
-        if obj.discount != Decimal("0.00"):
-            discount_price = obj.price * (
-                Decimal("1.00") - obj.discount / Decimal("100.00")
-            )
-            return discount_price
-        else:
-            return None
+    def get_discounted_price(self, obj: app_models.Product):
+        if obj.discount:
+            return obj.price - (obj.price * obj.discount / 100)
+        return None
 
     def to_representation(self, instance):
         """
         Remove irrelevant discount-related fields from the serialized data.
         """
         data = super().to_representation(instance)
-        if data["discount_price"] is None:
-            del data["discount_price"]
-        if data["discount"] == 0:
-            del data["discount"]
+        if data["discounted_price"] is None:
+            data.pop("discounted_price", None)
+
+        if data["discount"] is None:
+            data.pop("discount", None)
         return data
 
 
