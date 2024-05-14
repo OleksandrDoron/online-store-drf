@@ -1,15 +1,16 @@
 from decimal import Decimal
-from django.utils import timezone
 from rest_framework import serializers
+
+from core.config.constants import LOSS_FACTOR
 from store import models as app_models
-from store.models import Product, Category
+from store.models import Category
 
 
 class ProductSerializer(serializers.Serializer):
     name = serializers.CharField(read_only=True)
     category = serializers.CharField(source="category.name", read_only=True)
     price = serializers.FloatField(read_only=True)
-    discounted_price = serializers.SerializerMethodField()
+    discounted_price = serializers.SerializerMethodField(read_only=True)
     discount = serializers.IntegerField(read_only=True)
     quantity = serializers.IntegerField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
@@ -33,57 +34,44 @@ class ProductSerializer(serializers.Serializer):
         return data
 
 
+class CategorySerializer(serializers.Serializer):
+    name = serializers.CharField(read_only=True)
+
+
 class ProductStaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50)
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-    price = serializers.DecimalField(max_digits=6, decimal_places=2)
+    category = serializers.CharField(max_length=25)
+    price = serializers.FloatField()
     quantity = serializers.IntegerField()
     discount = serializers.IntegerField()
     available = serializers.BooleanField(default=True)
-    cost_price = serializers.DecimalField(max_digits=6, decimal_places=2)
-    created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
-    updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+    cost_price = serializers.FloatField()
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     def validate(self, attrs):
         """
-        Validates the product price after applying a discount to ensure it does not fall below its cost price.
+        Validates the product attributes.
         """
+        # Extract attributes from the provided data
+        category_name = attrs.get('category')
+        quantity = attrs.get("quantity")
         cost_price = Decimal(attrs.get("cost_price", 0))
         price = Decimal(attrs.get("price", 0))
         discount = Decimal(attrs.get("discount", 0))
-        loss_factor = Decimal("0.95")
 
-        min_acceptable_price = cost_price * loss_factor
+        # Calculate the minimum acceptable price after discount
+        min_acceptable_price = cost_price * LOSS_FACTOR
         discounted_price = price * (1 - discount / 100)
 
+        # Check if the discounted price falls below the cost price
         if discounted_price < min_acceptable_price:
             raise serializers.ValidationError(
                 "Product price after applying discount cannot be lower than the cost price."
             )
 
+        # Check if the specified category exists
+        if not Category.objects.filter(name=category_name).exists():
+            raise serializers.ValidationError("Category does not exist")
+
         return attrs
-
-    def create(self, validated_data):
-        validated_data["created_at"] = timezone.now()
-        validated_data["updated_at"] = timezone.now()
-
-        return Product.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        category = validated_data.get("category", instance.category)
-
-        instance.name = validated_data.get("name", instance.name)
-        instance.price = validated_data.get("price", instance.price)
-        instance.quantity = validated_data.get("quantity", instance.quantity)
-        instance.discount = validated_data.get("discount", instance.discount)
-        instance.available = validated_data.get("available", instance.available)
-        instance.cost_price = validated_data.get("cost_price", instance.cost_price)
-        instance.updated_at = timezone.now()
-        if category != instance.category:
-            raise serializers.ValidationError("Вы не можете изменить категорию.")
-        instance.save()
-        return instance
-
-
-class CategorySerializer(serializers.Serializer):
-    name = serializers.CharField(read_only=True)
