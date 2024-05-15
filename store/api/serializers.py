@@ -1,9 +1,7 @@
 from decimal import Decimal
 from rest_framework import serializers
-
 from core.config.constants import LOSS_FACTOR
 from store import models as app_models
-from store.models import Category
 
 
 class ProductSerializer(serializers.Serializer):
@@ -43,19 +41,16 @@ class ProductStaffSerializer(serializers.Serializer):
     category = serializers.CharField(max_length=25)
     price = serializers.FloatField()
     quantity = serializers.IntegerField()
-    discount = serializers.IntegerField()
+    discount = serializers.IntegerField(default=0)
     available = serializers.BooleanField(default=True)
     cost_price = serializers.FloatField()
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+    updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
     def validate(self, attrs):
         """
         Validates the product attributes.
         """
-        # Extract attributes from the provided data
-        category_name = attrs.get('category')
-        quantity = attrs.get("quantity")
         cost_price = Decimal(attrs.get("cost_price", 0))
         price = Decimal(attrs.get("price", 0))
         discount = Decimal(attrs.get("discount", 0))
@@ -69,9 +64,4 @@ class ProductStaffSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Product price after applying discount cannot be lower than the cost price."
             )
-
-        # Check if the specified category exists
-        if not Category.objects.filter(name=category_name).exists():
-            raise serializers.ValidationError("Category does not exist")
-
         return attrs

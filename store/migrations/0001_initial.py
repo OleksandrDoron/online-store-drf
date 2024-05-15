@@ -5,43 +5,104 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50, unique=True, verbose_name='Category name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=50, unique=True, verbose_name="Category name"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Category',
-                'verbose_name_plural': 'Categories',
-                'ordering': ('id',),
+                "verbose_name": "Category",
+                "verbose_name_plural": "Categories",
+                "ordering": ("id",),
             },
         ),
         migrations.CreateModel(
-            name='Product',
+            name="Product",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50, unique=True, verbose_name='Product name')),
-                ('price', models.DecimalField(decimal_places=2, default=0.0, max_digits=6, verbose_name='Price')),
-                ('quantity', models.PositiveIntegerField(default=0, verbose_name='Quantity')),
-                ('discount', models.IntegerField(blank=True, default=0, null=True, verbose_name='Discount')),
-                ('available', models.BooleanField(default=True, verbose_name='Availability')),
-                ('cost_price', models.DecimalField(decimal_places=2, max_digits=6, verbose_name='Cost Price')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Create at')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Update at')),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='store.category', verbose_name='Category')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=50, unique=True, verbose_name="Product name"
+                    ),
+                ),
+                (
+                    "price",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0.0,
+                        max_digits=6,
+                        verbose_name="Price",
+                    ),
+                ),
+                (
+                    "quantity",
+                    models.PositiveIntegerField(default=0, verbose_name="Quantity"),
+                ),
+                (
+                    "discount",
+                    models.IntegerField(
+                        blank=True, default=0, null=True, verbose_name="Discount"
+                    ),
+                ),
+                (
+                    "available",
+                    models.BooleanField(default=True, verbose_name="Availability"),
+                ),
+                (
+                    "cost_price",
+                    models.DecimalField(
+                        decimal_places=2, max_digits=6, verbose_name="Cost Price"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Create at"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Update at"),
+                ),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="store.category",
+                        verbose_name="Category",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Product',
-                'verbose_name_plural': 'Products',
-                'ordering': ('id',),
+                "verbose_name": "Product",
+                "verbose_name_plural": "Products",
+                "ordering": ("id",),
             },
         ),
     ]

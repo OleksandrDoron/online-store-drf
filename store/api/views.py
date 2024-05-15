@@ -1,10 +1,12 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from store.api.filters import ProductFilter
+from store.api.permissions import IsAdmin
 from store.models import Product, Category
 from store.api.serializers import (
     CategorySerializer,
@@ -55,21 +57,50 @@ class ProductStuffViewSet(viewsets.ModelViewSet):
 
 
 class ProductCreateAPIView(APIView):
-    def post(self, request, *args, **kwargs):
+    permission_classes = (IsAdmin, IsAuthenticated)
+    """
+    API endpoint for creating a new product.
+    """
+
+    def post(self, request):
         serializer = ProductStaffSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # Check data validity
+        if serializer.is_valid():
 
-        new_product = Product.objects.create(
-            name=request.data.get('name'),
-            category=Category.objects.get(name=request.data.get('category')),
-            price=request.data.get('price'),
-            quantity=request.data.get('quantity'),
-            discount=request.data.get('discount'),
-            available=request.data.get('available', True),
-            cost_price=request.data.get('cost_price'),
-        )
+            # Check if a product with the same name already exists
+            if Product.objects.filter(name=request.data.get("name")).exists():
+                return Response({"message": "Product with this name already exists."},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'post': ProductStaffSerializer(new_product).data})
+            # Check if the specified category exists
+            if not Category.objects.filter(name=request.data.get("category")).exists():
+                return Response({"message": f"Category does not exist."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            # Create a new product
+            new_product = Product.objects.create(
+                name=request.data.get("name"),
+                category=Category.objects.get(name=request.data.get("category")),
+                price=request.data.get("price"),
+                quantity=request.data.get("quantity"),
+                discount=request.data.get("discount"),
+                available=request.data.get("available", True),
+                cost_price=request.data.get("cost_price"),
+            )
+            # Return response with created product data and success message
+            response_data = {
+                "message": "Product successfully created",
+                "product": ProductStaffSerializer(new_product).data,
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+        else:
+            # Return response with validation error message
+            errors_with_message = {
+                "message": "Validation error occurred.",
+                "errors": serializer.errors,
+            }
+            return Response(errors_with_message, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryList(generics.ListAPIView):
