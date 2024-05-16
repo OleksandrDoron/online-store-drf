@@ -29,5 +29,5 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if self.balance < 0:
-            raise ValidationError("Баланс не может быть отрицательным")
+            raise ValidationError("The balance cannot be negative")
         super().save(*args, **kwargs)

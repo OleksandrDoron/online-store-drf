@@ -49,7 +49,7 @@ class ProductStaffSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Validates the product attributes.
+        Validates the product price after applying a discount to ensure it does not fall below its cost price.
         """
         cost_price = Decimal(attrs.get("cost_price", 0))
         price = Decimal(attrs.get("price", 0))
