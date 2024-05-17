@@ -1,8 +1,10 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, viewsets, status
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -62,31 +64,36 @@ class ProductCreateAPIView(APIView):
     """
     API endpoint for creating a new product.
     """
-
     @swagger_auto_schema(
         operation_description="API endpoint for creating a new product.",
-        request_body=ProductStaffSerializer,
-        responses={201: "Product successfully created"},
-    )
+        request_body=ProductStaffSerializer)
     def post(self, request):
         serializer = ProductStaffSerializer(data=request.data)
         # Check data validity
-        if serializer.is_valid():
-            # Check if a product with the same name already exists
-            if Product.objects.filter(name=request.data.get("name")).exists():
-                return Response(
-                    {"message": "Product with this name already exists."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if not serializer.is_valid():
+            errors_with_message = {
+                "message": "Validation error occurred.",
+                "errors": serializer.errors,
+            }
+            return Response(errors_with_message, status=status.HTTP_400_BAD_REQUEST)
 
-            # Check if the specified category exists
-            if not Category.objects.filter(name=request.data.get("category")).exists():
-                return Response(
-                    {"message": f"Category does not exist."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        # Check the existence of the specified category
+        try:
+            Category.objects.get(name=request.data.get('category'))
+        except ObjectDoesNotExist:
+            return Response(
+                {"message": "This category doesn't exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-            # Create a new product
+        # Check the existence of a product with the specified name
+        try:
+            Product.objects.get(name=request.data.get('name'))
+            return Response(
+                {"message": "A product with the same name already exists"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ObjectDoesNotExist:
             new_product = Product.objects.create(
                 name=request.data.get("name"),
                 category=Category.objects.get(name=request.data.get("category")),
@@ -98,23 +105,16 @@ class ProductCreateAPIView(APIView):
             )
             # Return response with created product data and success message
             response_data = {
-                "message": "Product successfully created",
-                "product": ProductStaffSerializer(new_product).data,
+                    "message": "Product successfully created",
+                    "product": ProductStaffSerializer(new_product).data,
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
 
-        else:
-            # Return response with validation error message
-            errors_with_message = {
-                "message": "Validation error occurred.",
-                "errors": serializer.errors,
-            }
-            return Response(errors_with_message, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ProductUpdateAPIView(RetrieveUpdateAPIView):
+class ProductUpdateAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProductStaffSerializer
     queryset = Product.objects.all()
+    permission_classes = (IsAdmin, IsAuthenticated)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
