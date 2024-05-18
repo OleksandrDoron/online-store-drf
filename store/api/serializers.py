@@ -33,10 +33,12 @@ class ProductSerializer(serializers.Serializer):
 
 
 class CategorySerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)
 
 
 class ProductStaffSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=50)
     category = serializers.CharField(max_length=25)
     price = serializers.FloatField()

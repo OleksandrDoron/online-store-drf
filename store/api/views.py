@@ -1,10 +1,8 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, viewsets, status
-from rest_framework.generics import RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,6 +17,9 @@ from store.api.serializers import (
 
 
 class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Search products.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -54,16 +55,12 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class ProductStuffViewSet(viewsets.ModelViewSet):
-    serializer_class = ProductStaffSerializer
-    queryset = Product.objects.all()
-
-
 class ProductCreateAPIView(APIView):
+    """
+    Create a new product.
+    """
     permission_classes = (IsAdmin, IsAuthenticated)
-    """
-    API endpoint for creating a new product.
-    """
+
     @swagger_auto_schema(
         operation_description="API endpoint for creating a new product.",
         request_body=ProductStaffSerializer)
@@ -105,13 +102,16 @@ class ProductCreateAPIView(APIView):
             )
             # Return response with created product data and success message
             response_data = {
-                    "message": "Product successfully created",
-                    "product": ProductStaffSerializer(new_product).data,
+                "message": "Product successfully created",
+                "product": ProductStaffSerializer(new_product).data,
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
 
 
-class ProductUpdateAPIView(RetrieveUpdateDestroyAPIView):
+class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View, update, or delete a product.
+    """
     serializer_class = ProductStaffSerializer
     queryset = Product.objects.all()
     permission_classes = (IsAdmin, IsAuthenticated)
@@ -119,47 +119,81 @@ class ProductUpdateAPIView(RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
-        if serializer.is_valid():
-            instance.name = serializer.validated_data.get("name", instance.name)
-            instance.price = serializer.validated_data.get("price", instance.price)
-            instance.quantity = serializer.validated_data.get(
-                "quantity", instance.quantity
-            )
-            instance.discount = serializer.validated_data.get(
-                "discount", instance.discount
-            )
-            instance.available = serializer.validated_data.get(
-                "available", instance.available
-            )
-            instance.cost_price = serializer.validated_data.get(
-                "cost_price", instance.cost_price
-            )
-            instance.save()
-            return Response(
-                {"message": "Product successfully updated", "product": serializer.data},
-                status=status.HTTP_200_OK,
-            )
-        else:
+        if not serializer.is_valid():
             return Response(
                 {"message": "Validation error occurred.", "errors": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        instance.name = serializer.validated_data.get("name", instance.name)
+        instance.price = serializer.validated_data.get("price", instance.price)
+        instance.quantity = serializer.validated_data.get(
+            "quantity", instance.quantity
+        )
+        instance.discount = serializer.validated_data.get(
+            "discount", instance.discount
+        )
+        instance.available = serializer.validated_data.get(
+            "available", instance.available
+        )
+        instance.cost_price = serializer.validated_data.get(
+            "cost_price", instance.cost_price
+        )
+        instance.save()
+        return Response(
+            {"message": "Product successfully updated", "product": serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
-    @swagger_auto_schema(
-        operation_description="API endpoint for updating",
-        request_body=ProductStaffSerializer,
-        responses={
-            200: "Product successfully updated",
-            400: "Validation error occurred.",
-        },
-    )
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"message": "Product removed successfully"},
+                        status=status.HTTP_204_NO_CONTENT)
 
 
-class CategoryList(generics.ListAPIView):
+class CategoryCreateAPIView(generics.ListCreateAPIView):
+    """
+    Create a new category.
+    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAdmin, IsAuthenticated)
+
+    def post(self, request, *args, **kwargs):
+        serializer = CategorySerializer(data=request.data)
+        if not serializer.is_valid():
+            errors_with_message = {
+                "message": "Validation error occurred.",
+                "errors": serializer.errors,
+            }
+            return Response(errors_with_message, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            Category.objects.get(name=request.data.get('name'))
+            return Response(
+                {"message": "A category with the same name already exists"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ObjectDoesNotExist:
+            new_category = Category.objects.create(
+                name=request.data.get('name')
+            )
+        response_data = {
+            "message": "Category successfully created",
+            "category": CategorySerializer(new_category).data,
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class CategoryDetailView(generics.RetrieveDestroyAPIView):
+    """
+    View and delete a category.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAdmin, IsAuthenticated)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"message": "Category removed successfully"},
+                        status=status.HTTP_204_NO_CONTENT)
