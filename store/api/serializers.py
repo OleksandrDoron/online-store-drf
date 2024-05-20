@@ -34,7 +34,7 @@ class ProductSerializer(serializers.Serializer):
 
 class CategorySerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(read_only=True)
+    name = serializers.CharField()
 
 
 class ProductStaffSerializer(serializers.Serializer):

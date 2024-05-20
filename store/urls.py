@@ -21,9 +21,9 @@ urlpatterns = [
     ),
     # category endpoints
     path(
-        "api/v1/categories/",
+        "api/v1/category/create",
         CategoryCreateAPIView.as_view(),
-        name="category-list-create",
+        name="category-create",
     ),
     path(
         "api/v1/categories/<int:pk>/",

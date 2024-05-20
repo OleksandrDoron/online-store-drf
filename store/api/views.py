@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from store.api.filters import ProductFilter
@@ -55,7 +55,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class ProductCreateAPIView(generics.CreateAPIView):
+class ProductCreateAPIView(generics.GenericAPIView):
     """
     Create a new product.
     """
@@ -68,7 +68,7 @@ class ProductCreateAPIView(generics.CreateAPIView):
         request_body=ProductStaffSerializer,
         responses={201: openapi.Response("Product", ProductStaffSerializer)},
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         # Check data validity
         if not serializer.is_valid():
@@ -76,7 +76,9 @@ class ProductCreateAPIView(generics.CreateAPIView):
 
         # Check the existence of the specified category
         try:
-            category = Category.objects.get(name=request.data.get("category"))
+            category = Category.objects.get(
+                name=serializer.validated_data.get("category")
+            )
         except ObjectDoesNotExist:
             return Response(
                 {"message": "This category doesn't exist"},
@@ -85,13 +87,13 @@ class ProductCreateAPIView(generics.CreateAPIView):
 
         # Check the existence of a product with the specified name
         try:
-            Product.objects.get(name=request.data.get("name"))
+            Product.objects.get(name=serializer.validated_data.get("name"))
             return Response(
                 {"message": "A product with the same name already exists"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except ObjectDoesNotExist:
-            new_product = Product.objects.create(
+            product = Product.objects.create(
                 name=serializer.validated_data.get("name"),
                 category=category,
                 price=serializer.validated_data.get("price"),
@@ -101,7 +103,7 @@ class ProductCreateAPIView(generics.CreateAPIView):
                 cost_price=serializer.validated_data.get("cost_price"),
             )
             return Response(
-                ProductStaffSerializer(new_product).data, status=status.HTTP_201_CREATED
+                ProductStaffSerializer(product).data, status=status.HTTP_201_CREATED
             )
 
 
@@ -124,7 +126,9 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         for attr, value in serializer.validated_data.items():
             if attr == "category":
                 try:
-                    category = Category.objects.get(name=request.data.get("category"))
+                    category = Category.objects.get(
+                        name=serializer.validated_data.get("category")
+                    )
                     setattr(instance, attr, category)
                 except ObjectDoesNotExist:
                     return Response(
@@ -137,7 +141,7 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryCreateAPIView(generics.ListCreateAPIView):
+class CategoryCreateAPIView(generics.GenericAPIView):
     """
     Create a new category.
     """
@@ -146,28 +150,31 @@ class CategoryCreateAPIView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
     permission_classes = (IsAdmin, IsAuthenticated)
 
-    def post(self, request, *args, **kwargs):
+    @swagger_auto_schema(
+        operation_description="API endpoint for creating a new category.",
+        request_body=CategorySerializer,
+        responses={201: openapi.Response("Category", CategorySerializer)},
+    )
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        category_name = serializer.validated_data.get("name")
         try:
-            Category.objects.get(name=request.data.get("name"))
+            Category.objects.get(name=category_name)
             return Response(
                 {"message": "A category with the same name already exists"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except ObjectDoesNotExist:
-            new_category = Category.objects.create(name=request.data.get("name"))
-        return Response(
-            CategorySerializer(new_category).data, status=status.HTTP_201_CREATED
-        )
+            category = Category.objects.create(name=category_name)
+            return Response(
+                CategorySerializer(category).data, status=status.HTTP_201_CREATED
+            )
 
 
 class CategoryDetailView(generics.RetrieveDestroyAPIView):
-    """
-    View and delete a category.
-    """
-
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdmin, IsAuthenticated)
