@@ -10,8 +10,8 @@ from store.api.permissions import IsAdmin
 from store.models import Product, Category
 from store.api.serializers import (
     CategorySerializer,
-    ProductStaffSerializer,
     ProductSerializer,
+    ProductSearchSerializer,
 )
 
 
@@ -21,7 +21,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = ProductSearchSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
 
@@ -60,13 +60,13 @@ class ProductCreateAPIView(generics.GenericAPIView):
     Create a new product.
     """
 
-    serializer_class = ProductStaffSerializer
+    serializer_class = ProductSerializer
     permission_classes = (IsAdmin, IsAuthenticated)
 
     @swagger_auto_schema(
         operation_description="API endpoint for creating a new product.",
-        request_body=ProductStaffSerializer,
-        responses={201: openapi.Response("Product", ProductStaffSerializer)},
+        request_body=ProductSerializer,
+        responses={201: openapi.Response("Product", ProductSerializer)},
     )
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -103,7 +103,7 @@ class ProductCreateAPIView(generics.GenericAPIView):
                 cost_price=serializer.validated_data.get("cost_price"),
             )
             return Response(
-                ProductStaffSerializer(product).data, status=status.HTTP_201_CREATED
+                ProductSerializer(product).data, status=status.HTTP_201_CREATED
             )
 
 
@@ -112,7 +112,7 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     View, update, or delete a product.
     """
 
-    serializer_class = ProductStaffSerializer
+    serializer_class = ProductSerializer
     queryset = Product.objects.all()
     permission_classes = (IsAdmin, IsAuthenticated)
 
@@ -177,4 +177,4 @@ class CategoryCreateAPIView(generics.GenericAPIView):
 class CategoryDetailView(generics.RetrieveDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdmin, IsAuthenticated)
+    # permission_classes = (IsAdmin, IsAuthenticated)

@@ -13,7 +13,7 @@ schema_view = get_schema_view(
         "categories, placing orders, and much more.",
     ),
     public=True,
-    permission_classes=(AllowAny,),
+    permission_classes=[AllowAny],
 )
 
 swagger_urlpatterns = [

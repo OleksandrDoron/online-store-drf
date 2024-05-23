@@ -4,7 +4,7 @@ from core.config.constants import LOSS_FACTOR
 from store import models as app_models
 
 
-class ProductSerializer(serializers.Serializer):
+class ProductSearchSerializer(serializers.Serializer):
     name = serializers.CharField(read_only=True)
     category = serializers.CharField(source="category.name", read_only=True)
     price = serializers.FloatField(read_only=True)
@@ -34,10 +34,10 @@ class ProductSerializer(serializers.Serializer):
 
 class CategorySerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField()
+    name = serializers.CharField(max_length=100)
 
 
-class ProductStaffSerializer(serializers.Serializer):
+class ProductSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=50)
     category = serializers.CharField(max_length=25)
