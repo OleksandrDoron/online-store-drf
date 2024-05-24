@@ -77,7 +77,7 @@ class ProductCreateAPIView(generics.GenericAPIView):
         # Check the existence of the specified category
         try:
             category = Category.objects.get(
-                name=serializer.validated_data.get("category")
+                name=serializer.validated_data["category"]
             )
         except ObjectDoesNotExist:
             return Response(
@@ -86,25 +86,23 @@ class ProductCreateAPIView(generics.GenericAPIView):
             )
 
         # Check the existence of a product with the specified name
-        try:
-            Product.objects.get(name=serializer.validated_data.get("name"))
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
             return Response(
                 {"message": "A product with the same name already exists"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except ObjectDoesNotExist:
-            product = Product.objects.create(
-                name=serializer.validated_data.get("name"),
-                category=category,
-                price=serializer.validated_data.get("price"),
-                quantity=serializer.validated_data.get("quantity"),
-                discount=serializer.validated_data.get("discount"),
-                available=serializer.validated_data.get("available"),
-                cost_price=serializer.validated_data.get("cost_price"),
-            )
-            return Response(
-                ProductSerializer(product).data, status=status.HTTP_201_CREATED
-            )
+        product = Product.objects.create(
+            name=serializer.validated_data["name"],
+            category=category,
+            price=serializer.validated_data["price"],
+            quantity=serializer.validated_data["quantity"],
+            discount=serializer.validated_data["discount"],
+            available=serializer.validated_data["available"],
+            cost_price=serializer.validated_data["cost_price"],
+        )
+        return Response(
+            ProductSerializer(product).data, status=status.HTTP_201_CREATED
+        )
 
 
 class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -127,7 +125,7 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             if attr == "category":
                 try:
                     category = Category.objects.get(
-                        name=serializer.validated_data.get("category")
+                        name=serializer.validated_data["category"]
                     )
                     setattr(instance, attr, category)
                 except ObjectDoesNotExist:
@@ -160,7 +158,7 @@ class CategoryCreateAPIView(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        category_name = serializer.validated_data.get("name")
+        category_name = serializer.validated_data["name"]
         try:
             Category.objects.get(name=category_name)
             return Response(
@@ -177,4 +175,4 @@ class CategoryCreateAPIView(generics.GenericAPIView):
 class CategoryDetailView(generics.RetrieveDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    # permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin, IsAuthenticated)

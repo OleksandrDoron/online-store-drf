@@ -22,10 +22,10 @@ class ProductAdmin(admin.ModelAdmin):
         "cost_price",
         "created_at",
         "updated_at",
-    )  # Поля, которые будут отображаться в списке продуктов
+    )
     list_filter = ("category", "available", "created_at", "updated_at")
     search_fields = ("name",)
-    ordering = ("id",)  # Порядок сортировки
+    ordering = ("id",)
     fieldsets = (
         (
             None,

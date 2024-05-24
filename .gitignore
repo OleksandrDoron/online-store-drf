@@ -1,0 +1,23 @@
+# Django
+*.log
+*.pot
+*.pyc
+
+# Environment variables
+*.env
+.env.docker
+
+# Virtual environment
+venv/
+*.virtualenv/
+
+# IDE - PyCharm
+.idea/
+*.iml
+
+# Python
+*.egg-info/
+*.egg/
+__pycache__/
+.ruff_cache
+
