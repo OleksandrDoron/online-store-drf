@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
 
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
-        'DEFAULT_INFO': 'src.urls.app_info',
+        "DEFAULT_INFO": "src.urls.app_info",
         "Basic": {"type": "basic"},
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
     }
