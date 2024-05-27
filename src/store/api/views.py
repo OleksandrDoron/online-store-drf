@@ -17,7 +17,7 @@ from store.api.serializers import (
 
 class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Search products.
+    A view set for searching products.
     """
 
     queryset = Product.objects.all()
@@ -25,6 +25,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
 
+    # Parameters for filtering products
     CATEGORY = openapi.Parameter(
         name="category",
         in_=openapi.IN_QUERY,
@@ -51,11 +52,11 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     )
 
     @swagger_auto_schema(
-        operation_description="API endpoint to list products",
+        operation_description="API endpoint for listing products with optional filters.",
         manual_parameters=[CATEGORY, MIN_PRICE, MAX_PRICE, NAME],
         responses={
             200: openapi.Response(
-                "List of products", ProductSearchSerializer(many=True)
+                "List of products.", ProductSearchSerializer(many=True)
             )
         },
         operation_id="ListProducts",
@@ -64,8 +65,8 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="API endpoint to retrieve a product by ID",
-        responses={200: openapi.Response("Product details", ProductSearchSerializer)},
+        operation_description="API endpoint for retrieving a product by ID.",
+        responses={200: openapi.Response("Product details.", ProductSearchSerializer)},
         operation_id="RetrieveProductByID",
     )
     def retrieve(self, request, *args, **kwargs):
@@ -74,7 +75,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ProductCreateAPIView(generics.GenericAPIView):
     """
-    Create a new product.
+    A view for creating a new product.
     """
 
     serializer_class = ProductSerializer
@@ -83,7 +84,7 @@ class ProductCreateAPIView(generics.GenericAPIView):
     @swagger_auto_schema(
         operation_description="API endpoint for creating a new product.",
         request_body=ProductSerializer,
-        responses={201: openapi.Response("Product created", ProductSerializer)},
+        responses={201: openapi.Response("Product created.", ProductSerializer)},
         operation_id="CreateProduct",
     )
     def post(self, request):
@@ -97,14 +98,14 @@ class ProductCreateAPIView(generics.GenericAPIView):
             category = Category.objects.get(name=serializer.validated_data["category"])
         except ObjectDoesNotExist:
             return Response(
-                {"message": "This category doesn't exist"},
+                {"message": "This category doesn't exist."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Check the existence of a product with the specified name
         if Product.objects.filter(name=serializer.validated_data["name"]).exists():
             return Response(
-                {"message": "A product with the same name already exists"},
+                {"message": "A product with the same name already exists."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         product = Product.objects.create(
@@ -121,18 +122,16 @@ class ProductCreateAPIView(generics.GenericAPIView):
 
 class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
-    View, update, or delete a product.
+    A view for viewing, updating, or deleting a product.
     """
 
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
-    # permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin, IsAuthenticated)
 
     @swagger_auto_schema(
-        operation_description="Retrieve a product by ID (for staff)",
-        responses={
-            200: openapi.Response("Product details", ProductSerializer)
-        },
+        operation_description="API endpoint for retrieving a product by ID.",
+        responses={200: openapi.Response("Product details.", ProductSerializer)},
         operation_id="RetrieveProductByIDStaff",
     )
     def get(self, request, *args, **kwargs):
@@ -144,10 +143,10 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         Static method for documenting the put and patch methods.
         """
         return swagger_auto_schema(
-            operation_description="Update a product by ID",
+            operation_description="API endpoint for updating a product by ID.",
             request_body=ProductSerializer,
-            responses={200: openapi.Response("Product updated", ProductSerializer)},
-            operation_id="UpdateProductByID",
+            responses={200: openapi.Response("Product updated.", ProductSerializer)},
+            operation_id="UpdateProductByIDStaff",
         )(method)
 
     @_update_product_swagger_auto_schema
@@ -183,9 +182,9 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_description="Delete a product by ID",
+        operation_description="API endpoint for deleting a product by ID.",
         operation_id="DeleteProductByIDStaff",
-        responses={204: openapi.Response(description="Product deleted successfully")}
+        responses={204: openapi.Response(description="Product deleted successfully.")},
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
@@ -193,7 +192,7 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class CategoryCreateAPIView(generics.GenericAPIView):
     """
-    Create a new category.
+    A view for creating a new category.
     """
 
     queryset = Category.objects.all()
@@ -204,7 +203,7 @@ class CategoryCreateAPIView(generics.GenericAPIView):
         operation_description="API endpoint for creating a new category.",
         operation_id="CreateCategory",
         request_body=CategorySerializer,
-        responses={201: openapi.Response("Category", CategorySerializer)},
+        responses={201: openapi.Response("Category.", CategorySerializer)},
     )
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -215,7 +214,7 @@ class CategoryCreateAPIView(generics.GenericAPIView):
         try:
             Category.objects.get(name=category_name)
             return Response(
-                {"message": "A category with the same name already exists"},
+                {"message": "A category with the same name already exists."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except ObjectDoesNotExist:
@@ -226,24 +225,26 @@ class CategoryCreateAPIView(generics.GenericAPIView):
 
 
 class CategoryDetailView(generics.RetrieveDestroyAPIView):
+    """
+    A view for retrieving or deleting a category by ID.
+    """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdmin, IsAuthenticated)
 
     @swagger_auto_schema(
-        operation_description="Retrieve a category by ID",
-        responses={
-            200: openapi.Response("Category details", ProductSerializer)
-        },
+        operation_description="API endpoint for retrieving a category by ID.",
+        responses={200: openapi.Response("Category details.", ProductSerializer)},
         operation_id="RetrieveProductByIDStaff",
     )
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="Delete a category by ID",
+        operation_description="API endpoint for deleting a category by ID.",
         operation_id="DeleteCategoryByIDStaff",
-        responses={204: openapi.Response(description="Category deleted successfully")}
+        responses={204: openapi.Response(description="Category deleted successfully.")},
     )
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
