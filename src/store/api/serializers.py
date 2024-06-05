@@ -1,7 +1,7 @@
 from decimal import Decimal
 from rest_framework import serializers
 from config.constants import LOSS_FACTOR
-from store.api.mixins import DiscountPriceMixin
+from mixins import DiscountPriceMixin
 
 
 # Serializer for listing products.
