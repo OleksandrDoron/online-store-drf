@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt
 
 
 # Copy the contents of the current directory (in Docker context) into the container's /app directory
-COPY . /code/
+COPY src /code/
 
 # Copy the entrypoint.sh script into the container
 COPY entrypoint.sh /entrypoint.sh

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from core.config.constants import LOSS_FACTOR
+from config.constants import LOSS_FACTOR
 from store import models as app_models
 
 
