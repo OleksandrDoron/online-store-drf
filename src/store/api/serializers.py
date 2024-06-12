@@ -37,7 +37,37 @@ class CategorySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
 
 
-class ProductSerializer(serializers.Serializer):
+class ProductBaseSerializer(serializers.Serializer):
+    @staticmethod
+    def validate_price_and_discount(attrs):
+        """
+        Validates the product price after applying a discount to ensure it does not fall below its cost price.
+        """
+        cost_price = Decimal(attrs.get("cost_price", 0))
+        price = Decimal(attrs.get("price", 0))
+        discount = Decimal(attrs.get("discount", 0))
+
+        # Calculate the minimum acceptable price after discount
+        min_acceptable_price = cost_price * LOSS_FACTOR
+        price_after_discount = price * (1 - discount / 100)
+
+        # Check if the price is below the cost price
+        if price < cost_price:
+            raise serializers.ValidationError(
+                "Product price cannot be lower than the cost price."
+            )
+        # Check if the discounted price falls below the cost price
+        if price_after_discount < min_acceptable_price:
+            raise serializers.ValidationError(
+                "Product price after applying discount cannot be lower than the cost price."
+            )
+        return attrs
+
+    def validate(self, attrs):
+        return self.validate_price_and_discount(attrs)
+
+
+class ProductSerializer(ProductBaseSerializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=50)
     category = serializers.CharField(max_length=25)
@@ -49,21 +79,15 @@ class ProductSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
-    def validate(self, attrs):
-        """
-        Validates the product price after applying a discount to ensure it does not fall below its cost price.
-        """
-        cost_price = Decimal(attrs.get("cost_price", 0))
-        price = Decimal(attrs.get("price", 0))
-        discount = Decimal(attrs.get("discount", 0))
 
-        # Calculate the minimum acceptable price after discount
-        min_acceptable_price = cost_price * LOSS_FACTOR
-        discounted_price = price * (1 - discount / 100)
-
-        # Check if the discounted price falls below the cost price
-        if discounted_price < min_acceptable_price:
-            raise serializers.ValidationError(
-                "Product price after applying discount cannot be lower than the cost price."
-            )
-        return attrs
+class ProductPartialUpdateSerializer(ProductBaseSerializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(max_length=50, required=False)
+    category = serializers.CharField(max_length=25, required=False)
+    price = serializers.FloatField(required=False)
+    quantity = serializers.IntegerField(required=False)
+    discount = serializers.IntegerField(default=0, required=False)
+    available = serializers.BooleanField(default=True, required=False)
+    cost_price = serializers.FloatField(required=False)
+    created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+    updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
