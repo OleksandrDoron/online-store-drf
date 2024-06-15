@@ -11,7 +11,7 @@ from store.models import Product, Category
 from store.api.serializers import (
     CategorySerializer,
     ProductSerializer,
-    ProductSearchSerializer,
+    ProductDetailSerializer, ProductSearchSerializer,
     ProductPartialUpdateSerializer,
 )
 
@@ -121,19 +121,14 @@ class ProductCreateAPIView(generics.GenericAPIView):
         return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
 
 
-class ProductUpdateAPIView(generics.GenericAPIView):
+class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    A view for viewing, updating, or deleting a product.
+    """
+
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
     permission_classes = (IsAdmin, IsAuthenticated)
-
-    def get_serializer_class(self):
-        action_serializers_dict = {
-            "PUT": ProductSerializer,
-            "PATCH": ProductPartialUpdateSerializer,
-            "GET": ProductSerializer,
-        }
-        serializer_class = action_serializers_dict.get(self.request.method)
-        return serializer_class
 
     @swagger_auto_schema(
         operation_description="API endpoint for retrieving a product by ID.",
@@ -141,31 +136,31 @@ class ProductUpdateAPIView(generics.GenericAPIView):
         operation_id="RetrieveProductByIDStaff",
     )
     def get(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_description="API endpoint for updating a product by ID.",
-        responses={200: openapi.Response("Product updated.", ProductSerializer)},
-        operation_id="UpdateProduct",
-    )
+    @staticmethod
+    def _update_product_swagger_auto_schema(method):
+        """
+        Static method for documenting the put and patch methods.
+        """
+        return swagger_auto_schema(
+            operation_description="API endpoint for updating a product by ID.",
+            request_body=ProductSerializer,
+            responses={200: openapi.Response("Product updated.", ProductSerializer)},
+            operation_id="UpdateProductByIDStaff",
+        )(method)
+
+    @_update_product_swagger_auto_schema
     def put(self, request, *args, **kwargs):
-        return self.update_product(request, *args, **kwargs)
+        return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_description="API endpoint for partially updating a product by ID.",
-        responses={200: openapi.Response("Product updated.", ProductSerializer)},
-        operation_id="PartialUpdateProduct",
-    )
+    @_update_product_swagger_auto_schema
     def patch(self, request, *args, **kwargs):
-        kwargs["partial"] = True
-        return self.update_product(request, *args, **kwargs)
+        return super().patch(request, *args, **kwargs)
 
-    def update_product(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        partial = kwargs.pop("partial", False)
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -179,9 +174,7 @@ class ProductUpdateAPIView(generics.GenericAPIView):
                     setattr(instance, attr, category)
                 except ObjectDoesNotExist:
                     return Response(
-                        {
-                            "error": "Category does not exist. Category cannot be updated."
-                        },
+                        {"error": "Category does not exist."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
             else:
@@ -189,19 +182,13 @@ class ProductUpdateAPIView(generics.GenericAPIView):
         instance.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class ProductDestroyAPIView(generics.DestroyAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = (IsAdmin, IsAuthenticated)
-
     @swagger_auto_schema(
         operation_description="API endpoint for deleting a product by ID.",
         operation_id="DeleteProductByIDStaff",
         responses={204: openapi.Response(description="Product deleted successfully.")},
     )
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
 
 class CategoryCreateAPIView(generics.GenericAPIView):

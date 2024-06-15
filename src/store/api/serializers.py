@@ -1,10 +1,22 @@
 from decimal import Decimal
 from rest_framework import serializers
 from config.constants import LOSS_FACTOR
-from store import models as app_models
+from mixins import DiscountPriceMixin
 
 
-class ProductSearchSerializer(serializers.Serializer):
+# Serializer for listing products.
+class ProductSearchSerializer(DiscountPriceMixin, serializers.Serializer):
+    name = serializers.CharField(read_only=True)
+    price = serializers.FloatField(read_only=True)
+    discounted_price = serializers.SerializerMethodField(read_only=True)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return self.remove_discount_fields(data)
+
+
+# Serializer for retrieving a product.
+class ProductDetailSerializer(DiscountPriceMixin, serializers.Serializer):
     name = serializers.CharField(read_only=True)
     category = serializers.CharField(source="category.name", read_only=True)
     price = serializers.FloatField(read_only=True)
@@ -14,29 +26,12 @@ class ProductSearchSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
-    def get_discounted_price(self, obj: app_models.Product):
-        if obj.discount:
-            return obj.price - (obj.price * obj.discount / 100)
-        return None
-
     def to_representation(self, instance):
-        """
-        Remove irrelevant discount-related fields from the serialized data.
-        """
         data = super().to_representation(instance)
-        if data["discounted_price"] is None:
-            data.pop("discounted_price", None)
-
-        if data["discount"] is None:
-            data.pop("discount", None)
-        return data
+        return self.remove_discount_fields(data)
 
 
-class CategorySerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(max_length=100)
-
-
+# Serializer for handling CRUD operations on Product objects.
 class BaseProductSerializer(serializers.Serializer):
     @staticmethod
     def validate_price_and_discount(attrs):
@@ -89,3 +84,9 @@ class ProductPartialUpdateSerializer(BaseProductSerializer):
     cost_price = serializers.FloatField(required=False)
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+
+
+# Serializer for handling Create, Read, and Delete operations on Category objects.
+class CategorySerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(max_length=100)
