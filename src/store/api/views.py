@@ -22,9 +22,20 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Product.objects.all()
-    serializer_class = ProductSearchSerializer
+    # serializer_class = ProductDetailSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
+
+    # Select serializer based on the action
+    def get_serializer_class(self):
+        action_serializers_dict = {
+            'list': ProductSearchSerializer,
+            'retrieve': ProductDetailSerializer
+        }
+        serializer = action_serializers_dict.get(self.action)
+        if not serializer:
+            raise Exception(f'Serializer for {self.action=} is not exist')
+        return serializer
 
     # Parameters for filtering products
     CATEGORY = openapi.Parameter(
@@ -55,11 +66,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     @swagger_auto_schema(
         operation_description="API endpoint for listing products with optional filters.",
         manual_parameters=[CATEGORY, MIN_PRICE, MAX_PRICE, NAME],
-        responses={
-            200: openapi.Response(
-                "List of products.", ProductSearchSerializer(many=True)
-            )
-        },
+        responses={200: openapi.Response("List of products.", ProductDetailSerializer(many=True))},
         operation_id="ListProducts",
     )
     def list(self, request, *args, **kwargs):
@@ -67,7 +74,7 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
 
     @swagger_auto_schema(
         operation_description="API endpoint for retrieving a product by ID.",
-        responses={200: openapi.Response("Product details.", ProductSearchSerializer)},
+        responses={200: openapi.Response("Product details.", ProductDetailSerializer)},
         operation_id="RetrieveProductByID",
     )
     def retrieve(self, request, *args, **kwargs):
