@@ -175,8 +175,7 @@ class ProductUpdateAPIView(generics.GenericAPIView):
         operation_id="PartialUpdateProduct",
     )
     def patch(self, request, *args, **kwargs):
-        kwargs["partial"] = True
-        return self.update_product(request, *args, **kwargs)
+        return self.update_product(request, *args, **kwargs, partial=True)
 
     def update_product(self, request, *args, **kwargs):
         instance = self.get_object()
