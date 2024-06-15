@@ -37,7 +37,7 @@ class CategorySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
 
 
-class ProductBaseSerializer(serializers.Serializer):
+class BaseProductSerializer(serializers.Serializer):
     @staticmethod
     def validate_price_and_discount(attrs):
         """
@@ -67,8 +67,7 @@ class ProductBaseSerializer(serializers.Serializer):
         return self.validate_price_and_discount(attrs)
 
 
-class ProductSerializer(ProductBaseSerializer):
-    id = serializers.IntegerField(read_only=True)
+class ProductSerializer(BaseProductSerializer):
     name = serializers.CharField(max_length=50)
     category = serializers.CharField(max_length=25)
     price = serializers.FloatField()
@@ -80,10 +79,9 @@ class ProductSerializer(ProductBaseSerializer):
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
 
-class ProductPartialUpdateSerializer(ProductBaseSerializer):
-    id = serializers.IntegerField(read_only=True)
+class ProductPartialUpdateSerializer(BaseProductSerializer):
     name = serializers.CharField(max_length=50, required=False)
-    category = serializers.CharField(max_length=25, required=False)
+    category = serializers.CharField(read_only=True)
     price = serializers.FloatField(required=False)
     quantity = serializers.IntegerField(required=False)
     discount = serializers.IntegerField(default=0, required=False)
