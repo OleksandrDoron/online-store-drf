@@ -5,7 +5,7 @@ from store.api.views import (
     ProductCreateAPIView,
     ProductUpdateAPIView,
     CategoryCreateAPIView,
-    CategoryDetailView, ProductDestroyAPIView,
+    CategoryDetailAPIView, ProductDestroyAPIView,
 )
 
 urlpatterns = [
@@ -17,5 +17,5 @@ urlpatterns = [
 
     # category endpoints
     path("api/v1/categories/create", CategoryCreateAPIView.as_view(), name="category-create"),
-    path("api/v1/categories/<int:pk>/", CategoryDetailView.as_view(), name="category-detail-delete"),
+    path("api/v1/categories/<int:pk>/", CategoryDetailAPIView.as_view(), name="category-detail-delete"),
 ]
