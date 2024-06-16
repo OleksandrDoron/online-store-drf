@@ -23,7 +23,6 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Product.objects.all()
-    serializer_class = ProductDetailSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
 
@@ -121,7 +120,7 @@ class ProductCreateAPIView(generics.GenericAPIView):
 
         # Check the existence of the specified category
         try:
-            category = Category.objects.get(name=serializer.validated_data["category"])
+            category = Category.objects.get(id=serializer.validated_data["category_id"])
         except ObjectDoesNotExist:
             return Response(
                 {"message": "This category doesn't exist."},
@@ -150,8 +149,6 @@ class ProductUpdateAPIView(generics.GenericAPIView):
     """
     A view for updating a product.
     """
-
-    serializer_class = ProductSerializer
     queryset = Product.objects.all()
     permission_classes = (IsAdmin, IsAuthenticated)
 
@@ -200,23 +197,10 @@ class ProductUpdateAPIView(generics.GenericAPIView):
 
         # Update the object fields based on the serializer data
         for attr, value in serializer.validated_data.items():
-            if attr == "category":
-                try:
-                    category = Category.objects.get(
-                        name=serializer.validated_data["category"]
-                    )
-                    setattr(instance, attr, category)
-                except ObjectDoesNotExist:
-                    return Response(
-                        {
-                            "error": "Category does not exist. Category cannot be updated."
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-            else:
-                setattr(instance, attr, value)
+            setattr(instance, attr, value)
+
         instance.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(ProductSerializer(instance).data, status=status.HTTP_200_OK)
 
 
 class ProductDestroyAPIView(generics.DestroyAPIView):

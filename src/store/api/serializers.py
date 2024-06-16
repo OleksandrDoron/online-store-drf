@@ -8,6 +8,7 @@ from mixins import DiscountPriceMixin
 class ProductSearchSerializer(DiscountPriceMixin, serializers.Serializer):
     name = serializers.CharField(read_only=True)
     price = serializers.FloatField(read_only=True)
+    discount = serializers.IntegerField(read_only=True)
     discounted_price = serializers.SerializerMethodField(read_only=True)
 
 
@@ -55,8 +56,11 @@ class BaseProductSerializer(serializers.Serializer):
 
 
 class ProductSerializer(BaseProductSerializer):
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=50)
-    category = serializers.CharField(max_length=25)
+    category_id = serializers.IntegerField(
+        help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
+    )
     price = serializers.FloatField()
     quantity = serializers.IntegerField()
     discount = serializers.IntegerField(default=0)
@@ -68,9 +72,9 @@ class ProductSerializer(BaseProductSerializer):
 
 class ProductPartialUpdateSerializer(BaseProductSerializer):
     name = serializers.CharField(max_length=50, required=False)
-    category = serializers.IntegerField(
-        read_only=True,
+    category_id = serializers.IntegerField(
         help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
+        required=False,
     )
     price = serializers.FloatField(required=False)
     quantity = serializers.IntegerField(required=False)
