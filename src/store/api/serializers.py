@@ -10,10 +10,6 @@ class ProductSearchSerializer(DiscountPriceMixin, serializers.Serializer):
     price = serializers.FloatField(read_only=True)
     discounted_price = serializers.SerializerMethodField(read_only=True)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        return self.remove_discount_fields(data)
-
 
 # Serializer for retrieving a product.
 class ProductDetailSerializer(DiscountPriceMixin, serializers.Serializer):
@@ -25,10 +21,6 @@ class ProductDetailSerializer(DiscountPriceMixin, serializers.Serializer):
     quantity = serializers.IntegerField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        return self.remove_discount_fields(data)
 
 
 # Serializer for handling CRUD operations on Product objects.
@@ -76,7 +68,10 @@ class ProductSerializer(BaseProductSerializer):
 
 class ProductPartialUpdateSerializer(BaseProductSerializer):
     name = serializers.CharField(max_length=50, required=False)
-    category = serializers.CharField(read_only=True)
+    category = serializers.IntegerField(
+        read_only=True,
+        help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
+    )
     price = serializers.FloatField(required=False)
     quantity = serializers.IntegerField(required=False)
     discount = serializers.IntegerField(default=0, required=False)

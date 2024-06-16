@@ -86,6 +86,19 @@ class ProductSearchViewSet(viewsets.ReadOnlyModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
 
+class CategorySearchAPIView(generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    @swagger_auto_schema(
+        operation_description="API endpoint for listing categories.",
+        responses={200: openapi.Response("List of categories", CategorySerializer)},
+        operation_id="ListCategories",
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
 class ProductCreateAPIView(generics.GenericAPIView):
     """
     A view for creating a new product.
