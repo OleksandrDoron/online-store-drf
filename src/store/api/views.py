@@ -155,7 +155,7 @@ class ProductUpdateAPIView(generics.GenericAPIView):
     """
 
     queryset = Product.objects.all()
-    # permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin, IsAuthenticated)
 
     def get_serializer_class(self):
         action_serializers_dict = {

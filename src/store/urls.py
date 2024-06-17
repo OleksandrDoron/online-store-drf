@@ -5,19 +5,48 @@ from store.api.views import (
     ProductCreateAPIView,
     ProductUpdateAPIView,
     CategoryCreateAPIView,
-    CategoryDetailAPIView, ProductDestroyAPIView, CategorySearchAPIView,
+    CategoryDetailAPIView,
+    ProductDestroyAPIView,
+    CategorySearchAPIView,
 )
 
+API_PREFIX = "v1/"
+
 urlpatterns = [
-    # product endpoints
-    path("api/v1/", include(router.urls)),
-    path("api/v1/products/create", ProductCreateAPIView.as_view(), name="product-create"),
-    path("api/v1/products/<int:pk>/", ProductUpdateAPIView.as_view(), name="product-detail"),
-    path("api/v1/product/delete/<int:pk>/", ProductDestroyAPIView.as_view(), name="product-destroy"),
-
-    # category endpoints
-    path("api/v1/categories/create", CategoryCreateAPIView.as_view(), name="category-create"),
-    path("api/v1/categories/<int:pk>/", CategoryDetailAPIView.as_view(), name="category-detail-delete"),
-    path("api/v1/categories/", CategorySearchAPIView.as_view(), name="category-search"),
-
+    path(
+        API_PREFIX,
+        include(
+            [
+                path("", include(router.urls)),
+                path(
+                    "products/", ProductCreateAPIView.as_view(), name="product-create"
+                ),
+                path(
+                    "products/<int:pk>/",
+                    ProductUpdateAPIView.as_view(),
+                    name="product-detail",
+                ),
+                path(
+                    "products/<int:pk>/",
+                    ProductDestroyAPIView.as_view(),
+                    name="product-destroy",
+                ),
+                path(
+                    "categories/",
+                    CategoryCreateAPIView.as_view(),
+                    name="category-create",
+                ),
+                path(
+                    "categories/<int:pk>/",
+                    CategoryDetailAPIView.as_view(),
+                    name="category-detail-delete",
+                ),
+                path(
+                    "categories/search",
+                    CategorySearchAPIView.as_view(),
+                    name="category-search",
+                ),
+            ]
+        ),
+    )
 ]
