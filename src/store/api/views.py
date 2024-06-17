@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
@@ -5,6 +7,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from config.constants import LOSS_FACTOR
 from store.api.filters import ProductFilter
 from store.api.permissions import IsAdmin
 from store.models import Product, Category
@@ -149,8 +153,9 @@ class ProductUpdateAPIView(generics.GenericAPIView):
     """
     A view for updating a product.
     """
+
     queryset = Product.objects.all()
-    permission_classes = (IsAdmin, IsAuthenticated)
+    # permission_classes = (IsAdmin, IsAuthenticated)
 
     def get_serializer_class(self):
         action_serializers_dict = {
@@ -195,6 +200,36 @@ class ProductUpdateAPIView(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        # Retrieve or use existing values from the instance if none are provided,
+        # and check the values before saving (only for partial updates).
+        if partial:
+            cost_price = serializer.validated_data.get(
+                "cost_price", instance.cost_price
+            )
+            price = serializer.validated_data.get("price", instance.price)
+            discount = Decimal(
+                serializer.validated_data.get("discount", instance.discount)
+            )
+
+            # Calculate the minimum acceptable price after discount
+            min_acceptable_price = cost_price * LOSS_FACTOR
+            price_after_discount = price * (1 - discount / 100)
+
+            # Check if the price is below the cost price
+            if price < cost_price:
+                return Response(
+                    {"error": "Product price cannot be lower than the cost price."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Check if the discounted price falls below the cost price
+            if price_after_discount < min_acceptable_price:
+                return Response(
+                    {
+                        "error": "Product price after applying discount cannot be lower than the cost price."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         # Update the object fields based on the serializer data
         for attr, value in serializer.validated_data.items():
             setattr(instance, attr, value)

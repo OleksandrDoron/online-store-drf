@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Union
 from rest_framework import serializers
 from config.constants import LOSS_FACTOR
 from mixins import DiscountPriceMixin
@@ -24,16 +25,29 @@ class ProductDetailSerializer(DiscountPriceMixin, serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
 
-# Serializer for handling CRUD operations on Product objects.
-class BaseProductSerializer(serializers.Serializer):
-    @staticmethod
-    def validate_price_and_discount(attrs):
+class ProductSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(max_length=50)
+    category_id = serializers.IntegerField(
+        help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
+    )
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField()
+    discount = serializers.IntegerField(default=0)
+    available = serializers.BooleanField(default=True)
+    cost_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+    updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+
+    def validate(
+        self, attrs: dict[str, Union[Decimal, int, float]]
+    ) -> dict[str, Union[Decimal, int, float]]:
         """
         Validates the product price after applying a discount to ensure it does not fall below its cost price.
         """
-        cost_price = Decimal(attrs.get("cost_price", 0))
-        price = Decimal(attrs.get("price", 0))
-        discount = Decimal(attrs.get("discount", 0))
+        cost_price = attrs["cost_price"]
+        price = attrs["price"]
+        discount = Decimal(attrs["discount"])
 
         # Calculate the minimum acceptable price after discount
         min_acceptable_price = cost_price * LOSS_FACTOR
@@ -51,36 +65,20 @@ class BaseProductSerializer(serializers.Serializer):
             )
         return attrs
 
-    def validate(self, attrs):
-        return self.validate_price_and_discount(attrs)
 
-
-class ProductSerializer(BaseProductSerializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(max_length=50)
-    category_id = serializers.IntegerField(
-        help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
-    )
-    price = serializers.FloatField()
-    quantity = serializers.IntegerField()
-    discount = serializers.IntegerField(default=0)
-    available = serializers.BooleanField(default=True)
-    cost_price = serializers.FloatField()
-    created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
-    updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
-
-
-class ProductPartialUpdateSerializer(BaseProductSerializer):
+class ProductPartialUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50, required=False)
     category_id = serializers.IntegerField(
         help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
         required=False,
     )
-    price = serializers.FloatField(required=False)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     quantity = serializers.IntegerField(required=False)
     discount = serializers.IntegerField(default=0, required=False)
     available = serializers.BooleanField(default=True, required=False)
-    cost_price = serializers.FloatField(required=False)
+    cost_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False
+    )
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
