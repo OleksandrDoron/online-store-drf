@@ -49,7 +49,9 @@ class ProductSerializer(serializers.Serializer):
         price = attrs["price"]
         discount = attrs["discount"]
 
-        validate_price(cost_price, price, discount)  # Call a function that checks the correctness of the price.
+        validate_price(
+            cost_price, price, discount
+        )  # Call a function that checks the correctness of the price.
         return attrs
 
 
@@ -79,7 +81,9 @@ class ProductPartialUpdateSerializer(serializers.Serializer):
         price = attrs.get("price", instance.price)
         discount = attrs.get("discount", instance.discount)
 
-        validate_price(cost_price, price, discount)  # Call a function that checks the correctness of the price.
+        validate_price(
+            cost_price, price, discount
+        )  # Call a function that checks the correctness of the price.
         return attrs
 
 

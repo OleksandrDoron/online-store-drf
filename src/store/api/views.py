@@ -105,7 +105,7 @@ class ProductCreateAPIView(generics.GenericAPIView):
     """
 
     serializer_class = ProductSerializer
-    permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin,)
 
     @swagger_auto_schema(
         operation_description="API endpoint for creating a new product.",
@@ -154,7 +154,7 @@ class ProductDetailUpdateAPIView(
     """
 
     queryset = Product.objects.all()
-    permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin,)
 
     def get_serializer_class(self):
         method = self.request.method.lower()
@@ -215,24 +215,6 @@ class ProductDetailUpdateAPIView(
         return Response(ProductSerializer(instance).data, status=status.HTTP_200_OK)
 
 
-class ProductDestroyAPIView(generics.DestroyAPIView):
-    """
-    A view for deleting a product.
-    """
-
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = (IsAdmin, IsAuthenticated)
-
-    @swagger_auto_schema(
-        operation_description="API endpoint for deleting a product by ID.",
-        operation_id="DeleteProductByIDStaff",
-        responses={204: openapi.Response(description="Product deleted successfully.")},
-    )
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
-
-
 class CategoryCreateAPIView(generics.GenericAPIView):
     """
     A view for creating a new category.
@@ -240,7 +222,7 @@ class CategoryCreateAPIView(generics.GenericAPIView):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdmin, IsAuthenticated)
+    permission_classes = (IsAdmin,)
 
     @swagger_auto_schema(
         operation_description="API endpoint for creating a new category.",

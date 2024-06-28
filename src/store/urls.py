@@ -6,7 +6,6 @@ from store.api.views import (
     ProductDetailUpdateAPIView,
     CategoryCreateAPIView,
     CategoryDetailAPIView,
-    ProductDestroyAPIView,
     CategorySearchAPIView,
 )
 
