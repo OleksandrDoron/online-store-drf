@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from store.api.filters import ProductFilter
-from store.api.permissions import IsAdmin
+from permissions import IsAdmin
 from store.models import Product, Category
 from store.api.serializers import (
     CategorySerializer,
