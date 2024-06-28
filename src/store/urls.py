@@ -3,7 +3,7 @@ from django.urls import path, include
 from store.api.router import router
 from store.api.views import (
     ProductCreateAPIView,
-    ProductUpdateAPIView,
+    ProductDetailUpdateAPIView,
     CategoryCreateAPIView,
     CategoryDetailAPIView,
     ProductDestroyAPIView,
@@ -23,13 +23,8 @@ urlpatterns = [
                 ),
                 path(
                     "products/<int:pk>/",
-                    ProductUpdateAPIView.as_view(),
-                    name="product-detail",
-                ),
-                path(
-                    "products/<int:pk>/",
-                    ProductDestroyAPIView.as_view(),
-                    name="product-destroy",
+                    ProductDetailUpdateAPIView.as_view(),
+                    name="product-detail-update-destroy",
                 ),
                 path(
                     "categories/",

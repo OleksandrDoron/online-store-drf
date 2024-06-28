@@ -1,14 +1,11 @@
-from decimal import Decimal
-
 from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from config.constants import LOSS_FACTOR
 from store.api.filters import ProductFilter
 from store.api.permissions import IsAdmin
 from store.models import Product, Category
@@ -149,21 +146,26 @@ class ProductCreateAPIView(generics.GenericAPIView):
         return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
 
 
-class ProductUpdateAPIView(generics.GenericAPIView):
+class ProductDetailUpdateAPIView(
+    generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.DestroyModelMixin
+):
     """
-    A view for updating a product.
+    A view for retrieving and updating a product.
     """
 
     queryset = Product.objects.all()
     permission_classes = (IsAdmin, IsAuthenticated)
 
     def get_serializer_class(self):
+        method = self.request.method.lower()
         action_serializers_dict = {
-            "PUT": ProductSerializer,
-            "PATCH": ProductPartialUpdateSerializer,
-            "GET": ProductSerializer,
+            "put": ProductSerializer,
+            "patch": ProductPartialUpdateSerializer,
+            "get": ProductSerializer,
         }
-        serializer_class = action_serializers_dict.get(self.request.method)
+        serializer_class = action_serializers_dict.get(method)
+        if not serializer_class:
+            raise Exception(f"Serializer for {method=} does not exist.")
         return serializer_class
 
     @swagger_auto_schema(
@@ -172,27 +174,33 @@ class ProductUpdateAPIView(generics.GenericAPIView):
         operation_id="RetrieveProductByIDStaff",
     )
     def get(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return self.retrieve(request, *args, **kwargs)
 
     @swagger_auto_schema(
         operation_description="API endpoint for updating a product by ID.",
         responses={200: openapi.Response("Product updated.", ProductSerializer)},
         operation_id="UpdateProduct",
     )
-    def put(self, request, *args, **kwargs):
-        return self.update_product(request, *args, **kwargs)
+    def put(self, request, **kwargs):
+        return self.update_product(request, **kwargs)
 
     @swagger_auto_schema(
         operation_description="API endpoint for partially updating a product by ID.",
         responses={200: openapi.Response("Product updated.", ProductSerializer)},
         operation_id="PartialUpdateProduct",
     )
-    def patch(self, request, *args, **kwargs):
-        return self.update_product(request, *args, **kwargs, partial=True)
+    def patch(self, request, **kwargs):
+        return self.update_product(request, **kwargs, partial=True)
 
-    def update_product(self, request, *args, **kwargs):
+    @swagger_auto_schema(
+        operation_description="API endpoint for deleting a product.",
+        responses={204: openapi.Response("Product deleted.")},
+        operation_id="DeleteProduct",
+    )
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def update_product(self, request, **kwargs):
         instance = self.get_object()
         partial = kwargs.pop("partial", False)
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -200,37 +208,6 @@ class ProductUpdateAPIView(generics.GenericAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Retrieve or use existing values from the instance if none are provided,
-        # and check the values before saving (only for partial updates).
-        if partial:
-            cost_price = serializer.validated_data.get(
-                "cost_price", instance.cost_price
-            )
-            price = serializer.validated_data.get("price", instance.price)
-            discount = Decimal(
-                serializer.validated_data.get("discount", instance.discount)
-            )
-
-            # Calculate the minimum acceptable price after discount
-            min_acceptable_price = cost_price * LOSS_FACTOR
-            price_after_discount = price * (1 - discount / 100)
-
-            # Check if the price is below the cost price
-            if price < cost_price:
-                return Response(
-                    {"error": "Product price cannot be lower than the cost price."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Check if the discounted price falls below the cost price
-            if price_after_discount < min_acceptable_price:
-                return Response(
-                    {
-                        "error": "Product price after applying discount cannot be lower than the cost price."
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        # Update the object fields based on the serializer data
         for attr, value in serializer.validated_data.items():
             setattr(instance, attr, value)
 

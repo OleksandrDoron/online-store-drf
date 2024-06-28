@@ -1,8 +1,8 @@
 from decimal import Decimal
 from typing import Union
 from rest_framework import serializers
-from config.constants import LOSS_FACTOR
 from mixins import DiscountPriceMixin
+from validators import validate_price
 
 
 # Serializer for listing products.
@@ -29,7 +29,7 @@ class ProductSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=50)
     category_id = serializers.IntegerField(
-        help_text="ID of the category. Use the /categories/ endpoint to get available categories.",
+        help_text="ID of the category. Use the 'v1/categories/search' endpoint to get available categories.",
     )
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     quantity = serializers.IntegerField()
@@ -40,29 +40,16 @@ class ProductSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
 
     def validate(
-        self, attrs: dict[str, Union[Decimal, int, float]]
-    ) -> dict[str, Union[Decimal, int, float]]:
+        self, attrs: dict[str, Union[Decimal, int]]
+    ) -> dict[str, Union[Decimal, int]]:
         """
         Validates the product price after applying a discount to ensure it does not fall below its cost price.
         """
         cost_price = attrs["cost_price"]
         price = attrs["price"]
-        discount = Decimal(attrs["discount"])
+        discount = attrs["discount"]
 
-        # Calculate the minimum acceptable price after discount
-        min_acceptable_price = cost_price * LOSS_FACTOR
-        price_after_discount = price * (1 - discount / 100)
-
-        # Check if the price is below the cost price
-        if price < cost_price:
-            raise serializers.ValidationError(
-                "Product price cannot be lower than the cost price."
-            )
-        # Check if the discounted price falls below the cost price
-        if price_after_discount < min_acceptable_price:
-            raise serializers.ValidationError(
-                "Product price after applying discount cannot be lower than the cost price."
-            )
+        validate_price(cost_price, price, discount)  # Call a function that checks the correctness of the price.
         return attrs
 
 
@@ -79,8 +66,21 @@ class ProductPartialUpdateSerializer(serializers.Serializer):
     cost_price = serializers.DecimalField(
         max_digits=10, decimal_places=2, required=False
     )
-    created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
-    updated_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M")
+
+    def validate(
+        self, attrs: dict[str, Union[Decimal, int]]
+    ) -> dict[str, Union[Decimal, int]]:
+        """
+        Validates the product attributes during a partial update to ensure the price after applying a discount
+        does not fall below the cost price.
+        """
+        instance = self.instance
+        cost_price = attrs.get("cost_price", instance.cost_price)
+        price = attrs.get("price", instance.price)
+        discount = attrs.get("discount", instance.discount)
+
+        validate_price(cost_price, price, discount)  # Call a function that checks the correctness of the price.
+        return attrs
 
 
 # Serializer for handling Create, Read, and Delete operations on Category objects.
